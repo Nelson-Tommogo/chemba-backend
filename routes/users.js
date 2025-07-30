@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth');
+const { authorize } = require('../middlewares/auth');
 const { 
-  reportWaste, 
-  schedulePickup,
-  getUserReports
-} = require('../controllers/wasteController');
+  getUsersByRole,
+  getCurrentUser
+} = require('../controllers/userController');
 
-router.post('/report', auth, reportWaste);
-router.post('/schedule', auth, schedulePickup);
-router.get('/my-reports', auth, getUserReports);
+router.get('/me', auth, getCurrentUser);
+router.get('/role/:role', auth, authorize(['admin']), getUsersByRole);
 
 module.exports = router;
