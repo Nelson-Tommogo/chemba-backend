@@ -1,8 +1,8 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const WasteReportSchema = new mongoose.Schema({
+const WasteReportSchema = new Schema({
   user: { 
-    type: mongoose.Schema.Types.ObjectId, 
+    type: Schema.Types.ObjectId, 
     ref: 'User',
     required: true 
   },
@@ -12,4 +12,4 @@ const WasteReportSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('WasteReport', WasteReportSchema);
+export default model('WasteReport', WasteReportSchema);

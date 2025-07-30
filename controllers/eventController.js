@@ -1,5 +1,5 @@
-const Event = require('../models/Event');
-const upload = require('../utils/upload');
+import Event, { find } from '../models/Event.js';
+import upload from '../utils/upload.js';
 
 const createEvent = async (req, res) => {
   try {
@@ -17,14 +17,14 @@ const createEvent = async (req, res) => {
 
 const getEvents = async (req, res) => {
   try {
-    const events = await Event.find().populate('organizer', 'name');
+    const events = await find().populate('organizer', 'name');
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-module.exports = {
+export default {
   createEvent,
   getEvents
 };

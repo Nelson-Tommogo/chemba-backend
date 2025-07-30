@@ -1,13 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middlewares/auth');
-const { authorize } = require('../middlewares/auth');
-const { 
-  getUsersByRole,
-  getCurrentUser
-} = require('../controllers/userController');
+import { Router } from 'express';
+const router = Router();
+import auth from '../middlewares/auth.js';
+import { authorize } from '../middlewares/auth.js';
+import { getUsersByRole, getCurrentUser } from '../controllers/userController.js';
 
 router.get('/me', auth, getCurrentUser);
 router.get('/role/:role', auth, authorize(['admin']), getUsersByRole);
 
-module.exports = router;
+export default router;

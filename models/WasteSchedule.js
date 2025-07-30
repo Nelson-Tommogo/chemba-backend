@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const WasteScheduleSchema = new mongoose.Schema({
+const WasteScheduleSchema = new Schema({
   user: { 
-    type: mongoose.Schema.Types.ObjectId, 
+    type: Schema.Types.ObjectId, 
     ref: 'User',
     required: true 
   },
   collector: { 
-    type: mongoose.Schema.Types.ObjectId, 
+    type: Schema.Types.ObjectId, 
     ref: 'User',
     required: true 
   },
@@ -21,4 +21,4 @@ const WasteScheduleSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('WasteSchedule', WasteScheduleSchema);
+export default model('WasteSchedule', WasteScheduleSchema);

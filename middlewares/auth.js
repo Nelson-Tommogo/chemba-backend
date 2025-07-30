@@ -1,12 +1,15 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-module.exports = function(req, res, next) {
+const auth = (req, res, next) => {
+  // Get token from header
   const token = req.header('x-auth-token');
 
+  // Check if not token
   if (!token) {
     return res.status(401).json({ msg: 'No token, authorization denied' });
   }
 
+  // Verify token
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded.user;
@@ -16,7 +19,7 @@ module.exports = function(req, res, next) {
   }
 };
 
-exports.authorize = (...roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ msg: 'Unauthorized to access this resource' });
@@ -24,3 +27,5 @@ exports.authorize = (...roles) => {
     next();
   };
 };
+
+export default auth;

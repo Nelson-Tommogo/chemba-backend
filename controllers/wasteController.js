@@ -1,8 +1,8 @@
-const WasteReport = require('../models/WasteReport');
-const WasteSchedule = require('../models/WasteSchedule');
-const User = require('../models/User');
+import WasteReport, { find } from '../models/WasteReport.js';
+import WasteSchedule from '../models/WasteSchedule.js';
+import { findByIdAndUpdate, findById } from '../models/User.js';
 
-exports.reportWaste = async (req, res) => {
+export async function reportWaste(req, res) {
   const { description, location } = req.body;
   
   try {
@@ -13,7 +13,7 @@ exports.reportWaste = async (req, res) => {
     });
 
     // Add points to user
-    await User.findByIdAndUpdate(req.user.id, { $inc: { points: 10 } });
+    await findByIdAndUpdate(req.user.id, { $inc: { points: 10 } });
 
     const report = await newReport.save();
     res.json(report);
@@ -21,14 +21,14 @@ exports.reportWaste = async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server error');
   }
-};
+}
 
-exports.schedulePickup = async (req, res) => {
+export async function schedulePickup(req, res) {
   const { collectorId, date, pointsUsed } = req.body;
   
   try {
     // Check if user has enough points
-    const user = await User.findById(req.user.id);
+    const user = await findById(req.user.id);
     if (user.points < pointsUsed) {
       return res.status(400).json({ msg: 'Not enough points' });
     }
@@ -50,14 +50,14 @@ exports.schedulePickup = async (req, res) => {
     console.error(err.message);
     res.status(500).send('Server error');
   }
-};
+}
 
-exports.getUserReports = async (req, res) => {
+export async function getUserReports(req, res) {
   try {
-    const reports = await WasteReport.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const reports = await find({ user: req.user.id }).sort({ createdAt: -1 });
     res.json(reports);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
-};
+}
