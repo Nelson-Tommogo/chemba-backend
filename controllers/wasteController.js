@@ -1,6 +1,6 @@
-import WasteReport, { find } from '../models/WasteReport.js';
+import WasteReport from '../models/WasteReport.js';
 import WasteSchedule from '../models/WasteSchedule.js';
-import { findByIdAndUpdate, findById } from '../models/User.js';
+import User from '../models/User.js';
 
 export async function reportWaste(req, res) {
   const { description, location } = req.body;
@@ -12,8 +12,8 @@ export async function reportWaste(req, res) {
       location
     });
 
-    // Add points to user
-    await findByIdAndUpdate(req.user.id, { $inc: { points: 10 } });
+    // Add points to user using User model
+    await User.findByIdAndUpdate(req.user.id, { $inc: { points: 10 } });
 
     const report = await newReport.save();
     res.json(report);
@@ -27,8 +27,8 @@ export async function schedulePickup(req, res) {
   const { collectorId, date, pointsUsed } = req.body;
   
   try {
-    // Check if user has enough points
-    const user = await findById(req.user.id);
+    // Check if user has enough points using User model
+    const user = await User.findById(req.user.id);
     if (user.points < pointsUsed) {
       return res.status(400).json({ msg: 'Not enough points' });
     }
@@ -54,7 +54,8 @@ export async function schedulePickup(req, res) {
 
 export async function getUserReports(req, res) {
   try {
-    const reports = await find({ user: req.user.id }).sort({ createdAt: -1 });
+    // Use WasteReport model directly
+    const reports = await WasteReport.find({ user: req.user.id }).sort({ createdAt: -1 });
     res.json(reports);
   } catch (err) {
     console.error(err.message);

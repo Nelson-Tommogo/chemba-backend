@@ -1,7 +1,7 @@
-import Event, { find } from '../models/Event.js';
+import Event from '../models/Event.js';  // Only import the default export
 import upload from '../utils/upload.js';
 
-const createEvent = async (req, res) => {
+export const createEvent = async (req, res) => {
   try {
     const event = new Event({
       ...req.body,
@@ -15,15 +15,17 @@ const createEvent = async (req, res) => {
   }
 };
 
-const getEvents = async (req, res) => {
+export const getEvents = async (req, res) => {
   try {
-    const events = await find().populate('organizer', 'name');
+    // Call find() on the Event model directly
+    const events = await Event.find().populate('organizer', 'name');
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
 };
 
+// Export as named exports
 export default {
   createEvent,
   getEvents
