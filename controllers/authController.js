@@ -1,4 +1,4 @@
-import User from '../models/User.js';  // Only import the default export
+import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -6,12 +6,11 @@ export const register = async (req, res) => {
   const { name, email, password, role, location, contact } = req.body;
 
   try {
-    // Use User.findOne() directly (no need to import it separately)
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: 'User already exists' });
 
     user = new User({ name, email, password, role, location, contact });
-
+c
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
 
@@ -21,7 +20,7 @@ export const register = async (req, res) => {
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5d' }, (err, token) => {
       if (err) throw err;
       res.json({ token });
-    });
+    });ss
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

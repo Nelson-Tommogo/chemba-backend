@@ -1,12 +1,12 @@
-import Event from '../models/Event.js';  // Only import the default export
-import upload from '../utils/upload.js';
+import Event from '../models/Event.js';
 
+// Create Event (must be a function, not object)
 export const createEvent = async (req, res) => {
   try {
     const event = new Event({
       ...req.body,
       organizer: req.user.id,
-      image: req.file ? req.file.path : null
+      image: req.file?.path || null // Cloudinary URL
     });
     await event.save();
     res.status(201).json(event);
@@ -15,18 +15,23 @@ export const createEvent = async (req, res) => {
   }
 };
 
+// Get All Events
 export const getEvents = async (req, res) => {
   try {
-    // Call find() on the Event model directly
-    const events = await Event.find().populate('organizer', 'name');
+    const events = await Event.find().populate('organizer', 'name email');
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }c
+};
+
+// Get User's Events
+export const getUserEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ organizer: req.user.id })
+                            .populate('organizer', 'name email');
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
-};
-
-// Export as named exports
-export default {
-  createEvent,
-  getEvents
 };

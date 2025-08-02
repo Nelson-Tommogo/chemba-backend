@@ -3,13 +3,15 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { v2 as cloudinary } from 'cloudinary';
 import cors from 'cors';
+import authRoutes from './routes/auth.js';
+import eventRoutes from './routes/events.js';
+import wasteRoutes from './routes/waste.js';
+import userRoutes from './routes/users.js';
 
 // Test MongoDB Connection
 async function testMongoDB() {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000 // 5 second timeout
     });
     console.log('✅ MongoDB connection test successful');
@@ -29,7 +31,6 @@ async function testCloudinary() {
   });
 
   try {
-    // Test by listing resources (empty query just to test connection)
     await cloudinary.api.resources({ max_results: 1 });
     console.log('✅ Cloudinary connection test successful');
   } catch (err) {
@@ -54,7 +55,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes would go here
+// Health check route
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -64,6 +65,12 @@ app.get('/health', (req, res) => {
     }
   });
 });
+
+// Main routes
+app.use('/api/auth', authRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/waste', wasteRoutes);
+app.use('/api/users', userRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;

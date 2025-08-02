@@ -7,6 +7,10 @@ import { getUsersByRole, getCurrentUser } from '../controllers/userController.js
 router.get('/me', auth, getCurrentUser);
 
 // GET /api/users/role/:role - Get users by role (admin only)
-router.get('/role/:role', auth, authorize(['admin']), getUsersByRole);
+router.get('/role/:role', 
+  auth, 
+  authorize(['admin']), // Array of allowed roles
+  getUsersByRole
+);
 
 export default router;

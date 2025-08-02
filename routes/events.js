@@ -1,19 +1,43 @@
+// routes/waste.js
 import { Router } from 'express';
+import { auth } from '../middlewares/auth.js';
+import upload from '../utils/upload.js';
+import {
+  createWaste,
+  getWaste,
+  getUserWaste
+} from '../controllers/wasteController.js';
+
 const router = Router();
-import auth from '../middlewares/auth.js';
-import { 
-  createEvent,
-  getEvents,
-  getUserEvents 
-} from '../controllers/eventController.js';
 
-// POST /api/events - Create new event
-router.post('/', auth, createEvent);
+const verifyImport = (imported, name) => {
+  if (typeof imported !== 'function') {
+    throw new Error(`Expected function for ${name} but got ${typeof imported}`);
+  }
+  return imported;
+};
 
-// GET /api/events - Get all events
-router.get('/', getEvents);
+// Verify imports
+verifyImport(auth, 'auth middleware');
+verifyImport(upload.single, 'upload.single middleware');
+verifyImport(createWaste, 'createWaste controller');
+verifyImport(getWaste, 'getWaste controller');
+verifyImport(getUserWaste, 'getUserWaste controller');
 
-// GET /api/events/my-events - Get user's events
-router.get('/my-events', auth, getUserEvents);
+// Routes
+router.post(
+  '/',
+  auth,
+  upload.single('image'),
+  createWaste
+);
+
+router.get('/', getWaste);
+
+router.get(
+  '/my-waste',
+  auth,
+  getUserWaste
+);
 
 export default router;

@@ -1,11 +1,13 @@
+// routes/waste.js
 import { Router } from 'express';
-const router = Router();
-import { auth } from '../middlewares/auth.js';
+import { auth } from '../middlewares/auth.js'; // ✅ named import
 import {
   reportWaste,
   schedulePickup, 
   getUserReports
 } from '../controllers/wasteController.js';
+
+const router = Router();
 
 // Waste reporting endpoint
 router.post('/report', 

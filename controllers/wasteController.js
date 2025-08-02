@@ -18,7 +18,7 @@ export async function reportWaste(req, res) {
     const report = await newReport.save();
     res.json(report);
   } catch (err) {
-    console.error(err.message);
+    console.error(err.message);c
     res.status(500).send('Server error');
   }
 }
