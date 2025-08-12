@@ -1,16 +1,46 @@
 import { Router } from 'express';
+import {
+  authenticate,
+  authorize,
+  checkTokenFreshness
+} from '../middlewares/auth.js';
+import {
+  getCurrentUser,
+  getUsersByRole,
+  updateUserProfile,
+  deactivateUser
+} from '../controllers/userController.js';
+import {
+  validateRoleParam,
+  validateProfileUpdate
+} from '../middlewares/validation.js';
+import { catchAsync } from '../middlewares/errorHandler.js';
+
 const router = Router();
-import { auth, authorize } from '../middlewares/auth.js';
-import { getUsersByRole, getCurrentUser } from '../controllers/userController.js';
-
-// GET /api/users/me - Get current user's profile
-router.get('/me', auth, getCurrentUser);
-
-// GET /api/users/role/:role - Get users by role (admin only)
-router.get('/role/:role', 
-  auth, 
-  authorize(['admin']), // Array of allowed roles
-  getUsersByRole
+router.get(
+  '/me',
+  authenticate,
+  catchAsync(getCurrentUser)
+);
+router.get(
+  '/role/:role',
+  authenticate,
+  authorize(['admin']),
+  validateRoleParam,
+  catchAsync(getUsersByRole)
+);
+router.patch(
+  '/me',
+  authenticate,
+  checkTokenFreshness(5),
+  validateProfileUpdate,
+  catchAsync(updateUserProfile)
+);
+router.post(
+  '/me/deactivate',
+  authenticate,
+  checkTokenFreshness(5),
+  catchAsync(deactivateUser)
 );
 
 export default router;

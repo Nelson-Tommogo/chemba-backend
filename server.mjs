@@ -19,7 +19,7 @@ async function testMongoDB() {
   } catch (err) {
     console.error('❌ MongoDB connection test failed:', err.message);
     process.exit(1);
-  }
+  }c
 }
 
 // Test Cloudinary Connection

@@ -1,43 +1,58 @@
-// routes/waste.js
 import { Router } from 'express';
-import { auth } from '../middlewares/auth.js';
-import upload from '../utils/upload.js';
+import { 
+  authenticate, 
+  authorize 
+} from '../middlewares/auth.js';
+import { upload, handleUploadError } from '../utils/upload.js';
 import {
-  createWaste,
-  getWaste,
-  getUserWaste
+  validateCreateWaste,
+  validateWasteQuery
+} from '../middlewares/validation.js';
+import {
+  createWasteReport,
+  getAllWasteReports,
+  getUserWasteReports,
+  getWasteReportById,
+  updateWasteReportStatus,
+  deleteWasteReport
 } from '../controllers/wasteController.js';
+import { catchAsync } from '../middlewares/errorHandler.js';
 
 const router = Router();
-
-const verifyImport = (imported, name) => {
-  if (typeof imported !== 'function') {
-    throw new Error(`Expected function for ${name} but got ${typeof imported}`);
-  }
-  return imported;
-};
-
-// Verify imports
-verifyImport(auth, 'auth middleware');
-verifyImport(upload.single, 'upload.single middleware');
-verifyImport(createWaste, 'createWaste controller');
-verifyImport(getWaste, 'getWaste controller');
-verifyImport(getUserWaste, 'getUserWaste controller');
-
-// Routes
 router.post(
   '/',
-  auth,
+  authenticate,
+  authorize('user', 'collector'),
   upload.single('image'),
-  createWaste
+  handleUploadError,
+  validateCreateWaste,
+  catchAsync(createWasteReport)
 );
-
-router.get('/', getWaste);
-
 router.get(
-  '/my-waste',
-  auth,
-  getUserWaste
+  '/',
+  validateWasteQuery,
+  catchAsync(getAllWasteReports)
+);
+router.get(
+  '/my-reports',
+  authenticate,
+  catchAsync(getUserWasteReports)
+);
+router.get(
+  '/:id',
+  catchAsync(getWasteReportById)
+);
+router.patch(
+  '/:id',
+  authenticate,
+  authorize('admin', 'collector'),
+  catchAsync(updateWasteReportStatus)
+);
+router.delete(
+  '/:id',
+  authenticate,
+  authorize('admin'),
+  catchAsync(deleteWasteReport)
 );
 
 export default router;
