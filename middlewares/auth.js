@@ -1,31 +1,52 @@
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import User from '../models/User.js';
 
-// Token sources (header, cookie, query param)
+// ========================
+//  Utility Functions
+// ========================
 const getToken = (req) => 
   req.header('x-auth-token') || 
   req.cookies?.token || 
   req.query?.token;
 
-// Unified error response
 const authError = (res, message = 'Authentication failed') => 
   res.status(401).json({ 
     error: message,
     solution: 'Please login or provide valid credentials'
   });
 
-// Main authentication middleware
+// ========================
+//  Rate Limiter (NEW)
+// ========================
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 auth attempts/window
+  message: {
+    error: 'Too many login attempts',
+    solution: 'Wait 15 minutes or contact support'
+  },
+  skip: process.env.NODE_ENV === 'development' // Disable in dev
+});
+
+// ========================
+//  Async Error Handler (NEW)
+// ========================
+export const catchAsync = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+// ========================
+//  Authentication Middleware
+// ========================
 export const authenticate = async (req, res, next) => {
   try {
-    // 1. Get token from multiple sources
     const token = getToken(req);
     if (!token) return authError(res, 'No authentication token provided');
 
-    // 2. Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded?.user?.id) return authError(res, 'Malformed token payload');
 
-    // 3. Fetch fresh user data (prevent stale permissions)
     const user = await User.findById(decoded.user.id)
       .select('-password -refreshToken -__v')
       .lean();
@@ -33,18 +54,15 @@ export const authenticate = async (req, res, next) => {
     if (!user) return authError(res, 'User no longer exists');
     if (user.status !== 'active') return authError(res, 'Account suspended');
 
-    // 4. Attach user to request
     req.user = {
       ...user,
-      tokenVersion: decoded.user.tokenVersion // For token invalidation
+      tokenVersion: decoded.user.tokenVersion
     };
 
-    // 5. Proceed
     next();
   } catch (err) {
     console.error(`Auth Error: ${err.message}`);
 
-    // Specific error messages
     if (err.name === 'TokenExpiredError') {
       return authError(res, 'Session expired. Please login again');
     }
@@ -56,17 +74,17 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
-// Role authorization middleware (flexible version)
+// ========================
+//  Role Authorization
+// ========================
 export const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    // 1. Check if user exists (should be attached by authenticate)
     if (!req.user) return authError(res);
 
-    // 2. Check role permissions
     const hasRole = allowedRoles.some(role => 
       Array.isArray(role) 
-        ? role.includes(req.user.role) // Multiple allowed roles
-        : role === req.user.role       // Single role
+        ? role.includes(req.user.role)
+        : role === req.user.role
     );
 
     if (!hasRole) {
@@ -81,7 +99,9 @@ export const authorize = (...allowedRoles) => {
   };
 };
 
-// Token refresh checker (for critical operations)
+// ========================
+//  Token Freshness Check
+// ========================
 export const checkTokenFreshness = (maxAgeMinutes = 15) => {
   return (req, res, next) => {
     if (req.user?.iat) {
@@ -95,4 +115,13 @@ export const checkTokenFreshness = (maxAgeMinutes = 15) => {
     }
     next();
   };
+};
+
+// Optional: Export all as object
+export default {
+  authLimiter,
+  catchAsync,
+  authenticate,
+  authorize,
+  checkTokenFreshness
 };

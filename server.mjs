@@ -18,8 +18,8 @@ async function testMongoDB() {
     await mongoose.disconnect();
   } catch (err) {
     console.error('❌ MongoDB connection test failed:', err.message);
-    process.exit(1);
-  }c
+    process.exit(1); // Exit the process with a non-zero status code
+  }
 }
 
 // Test Cloudinary Connection
