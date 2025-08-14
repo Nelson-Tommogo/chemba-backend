@@ -5,7 +5,7 @@ import User from '../models/User.js';
 // Environment variables
 const POINTS_FOR_REPORT = process.env.POINTS_FOR_REPORT || 1;
 
-export const reportWaste = async (req, res) => {
+export const createWasteReport = async (req, res) => {
   const { description, location } = req.body;
   
   // Input validation
@@ -130,6 +130,130 @@ export const getUserReports = async (req, res) => {
   } catch (err) {
     console.error('Get reports error:', err.message);
     res.status(500).json({
+      error: 'Server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+export const deleteWasteReport = async (req, res) => {
+  try {
+    const report = await WasteReport.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id // Ensure user can only delete their own reports
+    });
+
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found or unauthorized' });
+    }
+
+    // Optionally refund points if needed
+    if (process.env.REFUND_ON_DELETE === 'true') {
+      await User.findByIdAndUpdate(
+        req.user.id,
+        { $inc: { points: -POINTS_FOR_REPORT } }
+      );
+    }
+
+    res.json({ message: 'Report deleted successfully' });
+  } catch (err) {
+    console.error('Delete report error:', err.message);
+    res.status(500).json({ 
+      error: 'Server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+// NEW: Add getAllWasteReports
+export const getAllWasteReports = async (req, res) => {
+  try {
+    // For admins: get all reports
+    // For collectors: get reports in their area
+    // For regular users: get only their reports
+    
+    let query = {};
+    
+    if (req.user.role === 'user') {
+      query.user = req.user.id;
+    } else if (req.user.role === 'collector') {
+      // Implement location-based filtering for collectors
+      query = {
+        ...query,
+        status: 'pending',
+        // Add location filtering if needed
+      };
+    }
+    // Admins get all reports by default
+
+    const reports = await WasteReport.find(query)
+      .sort({ createdAt: -1 })
+      .populate('user', 'name email')
+      .lean();
+
+    res.json(reports);
+  } catch (err) {
+    console.error('Get all reports error:', err.message);
+    res.status(500).json({
+      error: 'Server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+// NEW: Add updateWasteReport (often needed with getAll)
+export const updateWasteReport = async (req, res) => {
+  try {
+    const updates = Object.keys(req.body);
+    const allowedUpdates = ['description', 'location', 'status', 'wasteType'];
+    const isValidOperation = updates.every(update => 
+      allowedUpdates.includes(update)
+    );
+
+    if (!isValidOperation) {
+      return res.status(400).json({ error: 'Invalid updates!' });
+    }
+
+    const report = await WasteReport.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        user: req.user.id // Users can only update their own reports
+      },
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found or unauthorized' });
+    }
+
+    res.json(report);
+  } catch (err) {
+    console.error('Update report error:', err.message);
+    res.status(500).json({
+      error: 'Server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+  }
+};
+
+export const getWasteReportById = async (req, res) => {
+  try {
+    const report = await WasteReport.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('collector', 'name email');
+    
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    
+    // Authorization check
+    if (req.user.role === 'user' && !report.user._id.equals(req.user.id)) {
+      return res.status(403).json({ error: 'Unauthorized access' });
+    }
+
+    res.json(report);
+  } catch (err) {
+    console.error('Get report by ID error:', err.message);
+    res.status(500).json({ 
       error: 'Server error',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });

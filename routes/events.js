@@ -1,58 +1,82 @@
 import { Router } from 'express';
 import { 
   authenticate, 
-  authorize 
+  authorize,
+  authLimiter 
 } from '../middlewares/auth.js';
 import { upload, handleUploadError } from '../utils/upload.js';
 import {
-  validateCreateWaste,
+  validateWasteReport,
+  validateReportUpdate,
+  validatePickupSchedule,
   validateWasteQuery
 } from '../middlewares/validation.js';
 import {
   createWasteReport,
   getAllWasteReports,
-  getUserWasteReports,
+  getUserReports,
   getWasteReportById,
-  updateWasteReportStatus,
-  deleteWasteReport
+  updateWasteReport,
+  deleteWasteReport,
+  schedulePickup
 } from '../controllers/wasteController.js';
-import { catchAsync } from '../middlewares/errorHandler.js';
+import { catchAsync } from '../middlewares/error.js';
 
 const router = Router();
+
+// Apply rate limiting to all routes
+router.use(authLimiter);
+
+// Waste Reports Collection
 router.post(
-  '/',
+  '/reports',
   authenticate,
   authorize('user', 'collector'),
   upload.single('image'),
   handleUploadError,
-  validateCreateWaste,
+  validateWasteReport,
   catchAsync(createWasteReport)
 );
+
 router.get(
-  '/',
+  '/reports',
   validateWasteQuery,
   catchAsync(getAllWasteReports)
 );
+
 router.get(
-  '/my-reports',
+  '/reports/me',
   authenticate,
-  catchAsync(getUserWasteReports)
+  catchAsync(getUserReports)
 );
+
 router.get(
-  '/:id',
+  '/reports/:id',
   catchAsync(getWasteReportById)
 );
+
 router.patch(
-  '/:id',
+  '/reports/:id',
   authenticate,
   authorize('admin', 'collector'),
-  catchAsync(updateWasteReportStatus)
+  validateReportUpdate,
+  catchAsync(updateWasteReport)
 );
+
 router.delete(
-  '/:id',
+  '/reports/:id',
   authenticate,
   authorize('admin'),
   catchAsync(deleteWasteReport)
+);
+
+// Pickup Scheduling
+router.post(
+  '/pickups',
+  authenticate,
+  authorize('user'),
+  validatePickupSchedule,
+  catchAsync(schedulePickup)
 );
 
 export default router;

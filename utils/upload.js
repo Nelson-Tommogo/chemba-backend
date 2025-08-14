@@ -96,7 +96,7 @@ const validateFile = (req, file, cb) => {
 };
 
 // Configure multer with enhanced security
-const upload = multer({
+export const upload = multer({
   storage: createStorage(),
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '5') * 1024 * 1024,
@@ -106,10 +106,8 @@ const upload = multer({
   fileFilter: validateFile
 });
 
-/**
- * Error handling middleware for uploads
- */
-export const handleUploadErrors = (err, req, res, next) => {
+// Change this export
+export const handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({
       error: 'Upload Error',
