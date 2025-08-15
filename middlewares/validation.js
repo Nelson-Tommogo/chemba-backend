@@ -83,7 +83,7 @@ export const validateReportId = validate([
     .withMessage('Invalid report ID format')
 ]);
 
-export const validateReportStatusUpdate = validate([
+export const validateReportUpdate = validate([
   body('status')
     .isIn(Object.values(ReportStatus))
     .withMessage(`Invalid status. Valid statuses: ${Object.values(ReportStatus).join(', ')}`),
@@ -142,4 +142,71 @@ export const validatePagination = validate([
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('Limit must be 1-100')
+]);
+
+// ==================== Auth-Specific Validators ====================
+
+export const validateRegister = validate([
+  body('name')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be 2-50 characters')
+    .escape(),
+  
+  body('email')
+    .isEmail()
+    .withMessage('Valid email is required')
+    .normalizeEmail(),
+    
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters')
+    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
+    .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
+    .matches(/[0-9]/).withMessage('Password must contain at least one number'),
+    
+  body('role')
+    .optional()
+    .isIn(['user', 'collector', 'admin'])
+    .withMessage('Invalid role specified'),
+    
+  body('location.coordinates')
+    .optional()
+    .isArray({ min: 2, max: 2 })
+    .withMessage('Invalid coordinates format'),
+    
+  body('contact')
+    .optional()
+    .isMobilePhone()
+    .withMessage('Valid phone number required')
+]);
+
+export const validateLogin = validate([
+  body('email')
+    .isEmail()
+    .withMessage('Valid email is required')
+    .normalizeEmail(),
+    
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+]);
+
+export const validateRefreshToken = validate([
+  body('refreshToken')
+    .notEmpty()
+    .withMessage('Refresh token is required')
+    .isJWT()
+    .withMessage('Invalid token format')
+]);
+export const validateWasteQuery = validate([
+  query('status')
+    .optional()
+    .isIn(['pending', 'collected', 'processed']),
+  query('radius')
+    .optional()
+    .isFloat({ min: 0.1, max: 50 }),
+  query('type')
+    .optional()
+    .isIn(Object.values(WasteType))
 ]);
