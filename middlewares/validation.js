@@ -1,4 +1,5 @@
 import { body, param, query } from 'express-validator';
+import { validationResult } from 'express-validator';
 import { WasteType, ReportStatus } from '../models/WasteReport.js';
 
 /**
@@ -27,6 +28,43 @@ export const validate = (validations) => [
     next();
   }
 ];
+
+// ==================== User Profile Validators ====================
+
+export const validateProfileUpdate = validate([
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be 2-50 characters')
+    .escape(),
+  
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Valid email is required')
+    .normalizeEmail(),
+    
+  body('avatar')
+    .optional()
+    .isURL()
+    .withMessage('Avatar must be a valid URL'),
+    
+  body('contact')
+    .optional()
+    .isMobilePhone()
+    .withMessage('Valid phone number required'),
+    
+  body('location.coordinates')
+    .optional()
+    .isArray({ min: 2, max: 2 })
+    .withMessage('Invalid coordinates format'),
+    
+  body('location.coordinates.*')
+    .optional()
+    .isFloat()
+    .withMessage('Coordinates must be numbers')
+]);
 
 // ==================== Waste-Specific Validators ====================
 
@@ -199,6 +237,7 @@ export const validateRefreshToken = validate([
     .isJWT()
     .withMessage('Invalid token format')
 ]);
+
 export const validateWasteQuery = validate([
   query('status')
     .optional()
@@ -209,4 +248,10 @@ export const validateWasteQuery = validate([
   query('type')
     .optional()
     .isIn(Object.values(WasteType))
+]);
+
+export const validateRoleParam = validate([
+  param('role')
+    .isIn(['user', 'collector', 'admin'])
+    .withMessage('Invalid role specified')
 ]);

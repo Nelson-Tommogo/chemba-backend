@@ -18,6 +18,8 @@ import {
 import { catchAsync } from '../middlewares/errorHandler.js';
 
 const router = Router();
+
+// Report waste
 router.post(
   '/report',
   authenticate,
@@ -27,6 +29,8 @@ router.post(
   validateWasteReport,
   catchAsync(reportWaste)
 );
+
+// Schedule pickup
 router.post(
   '/schedule',
   authenticate,
@@ -34,15 +38,22 @@ router.post(
   validatePickupSchedule,
   catchAsync(schedulePickup)
 );
+
+// Get user's reports
 router.get(
   '/my-reports',
   authenticate,
   catchAsync(getUserReports)
 );
+
+// Get report details
 router.get(
   '/reports/:id',
+  authenticate,
   catchAsync(getReportDetails)
 );
+
+// Update report status
 router.patch(
   '/reports/:id/status',
   authenticate,

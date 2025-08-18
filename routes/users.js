@@ -17,11 +17,13 @@ import {
 import { catchAsync } from '../middlewares/errorHandler.js';
 
 const router = Router();
+
 router.get(
   '/me',
   authenticate,
   catchAsync(getCurrentUser)
 );
+
 router.get(
   '/role/:role',
   authenticate,
@@ -29,6 +31,7 @@ router.get(
   validateRoleParam,
   catchAsync(getUsersByRole)
 );
+
 router.patch(
   '/me',
   authenticate,
@@ -36,6 +39,7 @@ router.patch(
   validateProfileUpdate,
   catchAsync(updateUserProfile)
 );
+
 router.post(
   '/me/deactivate',
   authenticate,
